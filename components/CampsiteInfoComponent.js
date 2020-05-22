@@ -1,25 +1,33 @@
 import React, { Component } from "react";
-import { Text, View, ScrollView, FlatList,
-  Modal, Button, StyleSheet,
-  Alert, PanResponder } from 'react-native';
+import {
+  Text,
+  View,
+  ScrollView,
+  FlatList,
+  Modal,
+  Button,
+  StyleSheet,
+  Alert,
+  PanResponder,
+} from "react-native";
 import { Card, Icon, Input, Rating } from "react-native-elements";
 import { connect } from "react-redux";
 import { baseUrl } from "../shared/baseUrl";
 import { postFavorite, postComment } from "../redux/ActionCreators";
-import * as Animatable from 'react-native-animatable';
+import * as Animatable from "react-native-animatable";
 
 const mapStateToProps = (state) => {
   return {
     campsites: state.campsites,
     comments: state.comments,
-    favorites: state.favorites
+    favorites: state.favorites,
   };
 };
 
 const mapDispatchToProps = {
   postFavorite: (campsiteId) => postFavorite(campsiteId),
   postComment: (campsiteId, rating, author, text) =>
-    postComment(campsiteId, rating, author, text)
+    postComment(campsiteId, rating, author, text),
 };
 
 function RenderComments({ comments }) {
@@ -27,13 +35,13 @@ function RenderComments({ comments }) {
     return (
       <View style={{ margin: 10 }}>
         <Text style={{ fontSize: 14 }}>{item.text}</Text>
-        <Rating 
-        startingValue={item.rating}
-        imageSize={10} 
-        ratingCount={5}
-        readonly  
-        style={{ paddingVertical: 5 }} 
-        alignItems='flex-start'
+        <Rating
+          startingValue={item.rating}
+          imageSize={10}
+          ratingCount={5}
+          readonly
+          style={{ paddingVertical: 5 }}
+          alignItems="flex-start"
         />
         <Text
           style={{ fontSize: 12 }}
@@ -43,84 +51,96 @@ function RenderComments({ comments }) {
   };
 
   return (
-    <Animatable.View animation='fadeInUp' duration={2000} delay={1000}>
-    <Card title="Comments">
-      <FlatList
-        data={comments}
-        renderItem={renderCommentItem}
-        keyExtractor={(item) => item.id.toString()}
-      />
-    </Card>
+    <Animatable.View animation="fadeInUp" duration={2000} delay={1000}>
+      <Card title="Comments">
+        <FlatList
+          data={comments}
+          renderItem={renderCommentItem}
+          keyExtractor={(item) => item.id.toString()}
+        />
+      </Card>
     </Animatable.View>
   );
 }
 
 function RenderCampsite(props) {
-
   const { campsite } = props;
 
-  const recognizeDrag = ({dx}) => (dx < -200) ? true : false;
+  const view = React.createRef();
 
-    const panResponder = PanResponder.create({
-        onStartShouldSetPanResponder: () => true,
-        onPanResponderEnd: (e, gestureState) => {
-            console.log('pan responder end', gestureState);
-            if (recognizeDrag(gestureState)) {
-                Alert.alert(
-                    'Add Favorite',
-                    'Are you sure you wish to add ' + campsite.name + ' to favorites?',
-                    [
-                        {
-                            text: 'Cancel',
-                            style: 'cancel',
-                            onPress: () => console.log('Cancel Pressed')
-                        },
-                        {
-                            text: 'OK',
-                            onPress: () => props.favorite ?
-                                console.log('Already set as a favorite') : props.markFavorite()
-                        }
-                    ],
-                    { cancelable: false }
-                );
-            }
-            return true;
-        }
-    });
+  const recognizeDrag = ({ dx }) => (dx < -200 ? true : false);
 
+  const panResponder = PanResponder.create({
+    onStartShouldSetPanResponder: () => true,
+    onPanResponderGrant: () => {
+      view.current.rubberBand(1000)
+      .then(endState => console.log(endState.finished ? 'finished' : 'canceled'));
+  },
+    onPanResponderEnd: (e, gestureState) => {
+      console.log("pan responder end", gestureState);
+      if (recognizeDrag(gestureState)) {
+        Alert.alert(
+          "Add Favorite",
+          "Are you sure you wish to add " + campsite.name + " to favorites?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel",
+              onPress: () => console.log("Cancel Pressed"),
+            },
+            {
+              text: "OK",
+              onPress: () =>
+                props.favorite
+                  ? console.log("Already set as a favorite")
+                  : props.markFavorite(),
+            },
+          ],
+          { cancelable: false }
+        );
+      }
+      return true;
+    },
+  });
 
   if (campsite) {
     return (
-      <Animatable.View animation='fadeInDown' duration={2000} delay={1000} {...panResponder.panHandlers}>
-      <Card
-        featuredTitle={campsite.name}
-        image={{ uri: baseUrl + campsite.image }}
+      <Animatable.View
+        animation="fadeInDown"
+        duration={2000}
+        delay={1000}
+        ref={view}
+        {...panResponder.panHandlers}
       >
-        <Text style={{ margin: 10 }}>{campsite.description}</Text>
-        <View style={styles.cardRow}>
-          <Icon
-            name={props.favorite ? "heart" : "heart-o"}
-            type="font-awesome"
-            color="#f50"
-            raised
-            reverse
-            onPress={() =>
-              props.favorite
-                ? console.log("Already set as a favorite")
-                : props.markFavorite()
-            }
-          />
-          <Icon
-            name={"pencil"}
-            type="font-awesome"
-            color="#5637DD"
-            style={styles.cardItem}
-            raised
-            reverse
-            onPress={() => props.onShowModal()}
-          />
-        </View>
-      </Card>
+        <Card
+          featuredTitle={campsite.name}
+          image={{ uri: baseUrl + campsite.image }}
+        >
+          <Text style={{ margin: 10 }}>{campsite.description}</Text>
+          <View style={styles.cardRow}>
+            <Icon
+              name={props.favorite ? "heart" : "heart-o"}
+              type="font-awesome"
+              color="#f50"
+              raised
+              reverse
+              onPress={() =>
+                props.favorite
+                  ? console.log("Already set as a favorite")
+                  : props.markFavorite()
+              }
+            />
+            <Icon
+              name={"pencil"}
+              type="font-awesome"
+              color="#5637DD"
+              style={styles.cardItem}
+              raised
+              reverse
+              onPress={() => props.onShowModal()}
+            />
+          </View>
+        </Card>
       </Animatable.View>
     );
   }
@@ -143,7 +163,12 @@ class CampsiteInfo extends Component {
   }
 
   handleComment(campsiteId) {
-    this.props.postComment(campsiteId, this.state.rating, this.state.author, this.state.text);
+    this.props.postComment(
+      campsiteId,
+      this.state.rating,
+      this.state.author,
+      this.state.text
+    );
     this.toggleModal();
   }
 
@@ -200,14 +225,14 @@ class CampsiteInfo extends Component {
               placeholder="Author"
               leftIcon={{ type: "font-awesome", name: "user-o" }}
               leftIconContainerStyle={{ paddingRight: 10 }}
-              onChangeText={author => this.setState({ author: author })}
+              onChangeText={(author) => this.setState({ author: author })}
               value={this.state.author}
             />
             <Input
               placeholder="Comment"
               leftIcon={{ type: "font-awesome", name: "comment-o" }}
               leftIconContainerStyle={{ paddingRight: 10 }}
-              onChangeText={text => this.setState({ text: text })}
+              onChangeText={(text) => this.setState({ text: text })}
               value={this.state.text}
             />
 
