@@ -8,8 +8,11 @@ import {
   Switch,
   Button,
   Modal,
+  Alert,
+  PanResponder,
 } from "react-native";
 import DatePicker from "react-native-datepicker";
+import * as Animatable from "react-native-animatable";
 
 class Reservation extends Component {
   constructor(props) {
@@ -27,13 +30,29 @@ class Reservation extends Component {
     title: "Reserve Campsite",
   };
 
-  toggleModal() {
-    this.setState({ showModal: !this.state.showModal });
-  }
+  // toggleModal() {
+  //   this.setState({ showModal: !this.state.showModal });
+  // }
 
   handleReservation() {
     console.log(JSON.stringify(this.state));
-    this.toggleModal();
+    Alert.alert(
+      "Begin Search?",
+      "Number of Campers: " + this.state.campers + "\n " +  "\n " + "Hike-In? " + this.state.hikeIn + "\n" + "\n " +  "Date " + this.state.date,
+      [
+        {
+          text: "Cancel",
+          style: "cancel",
+          onPress: () => this.resetForm()
+        },
+        {
+          text: "OK",
+          onPress: () => this.resetForm()
+        },
+      ],
+      { cancelable: false }
+    );
+    
   }
 
   resetForm() {
@@ -41,13 +60,13 @@ class Reservation extends Component {
       campers: 1,
       hikeIn: false,
       date: "",
-      showModal: false,
+      // showModal: false,
     });
   }
 
   render() {
     return (
-      <ScrollView>
+      <Animatable.View animation="fadeInUp" duration={2000} delay={1000}>
         <View style={styles.formRow}>
           <Text style={styles.formLabel}>Number of Campers</Text>
           <Picker
@@ -132,7 +151,7 @@ class Reservation extends Component {
             />
           </View>
         </Modal>
-      </ScrollView>
+        </Animatable.View>
     );
   }
 }
